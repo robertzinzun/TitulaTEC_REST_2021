@@ -38,15 +38,15 @@ class Opcion(db.Model):
         try:
             dict_json['estatus'] = "Ok"
             dict_json['mensaje'] = "Listado de la opcion"
-            dict_json['opcion'] = self.query.get(id).to_json()
+            dict_json['opcion'] = self.to_json(self.query.get(id))
         except:
             dict_json['estatus'] = "Error"
             dict_json['mensaje'] = "Error al ejecutar la consulta de la opcion"
 
         return json.dumps(dict_json)
 
-    def to_json(self):
-        opcion = {"idOpcion": self.idOpcion, "nombre": self.nombre, "descripcion": self.descripcion}
+    def to_json(self,o):
+        opcion = {"idOpcion": o.idOpcion, "nombre": o.nombre, "descripcion": o.descripcion}
         return opcion
 
     def insertar(self,json):
