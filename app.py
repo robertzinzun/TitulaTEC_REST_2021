@@ -1,6 +1,6 @@
 from flask import Flask,request,jsonify
 import json
-
+from Dao import Opcion,db
 
 app=Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI']='mysql+pymysql://titulatec_soa:Hola.123@localhost:3306/TitulaTEC_SOA'
@@ -24,17 +24,22 @@ def solicitudes():
 #Seccion del servicios de opciones
 @app.route('/opciones', methods=['GET'])
 def opciones():
-    opciones={"estatus":"ok","mensaje":"Listado de opciones","opciones":[{"idOpcion":1,"nombre":"Tesis","descripcion":"Informe de Tesis"}]}
-    return json.dumps(opciones)
+    o=Opcion()
+    lista=o.consultaGeneral()
+    print(lista)
+    return lista
 
 @app.route('/opciones/<int:id>',methods=['GET'])
 def opcion(id):
-    opcion={"estatus":"ok","mensaje":"Listado de opciones","opcion":{"idOpcion":id,"nombre":"Tesis","descripcion":"Informe de Tesis"}}
-    return json.dumps(opcion)
+    #opcion={"estatus":"ok","mensaje":"Listado de opciones","opcion":{"idOpcion":id,"nombre":"Tesis","descripcion":"Informe de Tesis"}}
+    o=Opcion()
+    return o.consultaIndividual(id)
 
 @app.route('/opciones',methods=['POST'])
 def registroOpcion():
-    opcion=request.get_json()
+    ojson=request.get_json()
+    o=Opcion()
+    o.insertar(ojson)
     salida={"estatus":"ok","mensaje":"Opcion registrada con exito"}
     return json.dumps(salida)
 
@@ -52,4 +57,5 @@ def eliminarOpcion(id):
 #fin de la sección del servicio de opciones
 
 if __name__=='__main__':
+    db.init_app(app)
     app.run(debug=True,host='0.0.0.0',port=5000)
