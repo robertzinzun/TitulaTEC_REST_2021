@@ -1,6 +1,7 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column,INTEGER,String
 import json
+from flask import jsonify
 
 db=SQLAlchemy()
 
@@ -50,11 +51,50 @@ class Opcion(db.Model):
         return opcion
 
     def insertar(self,json):
-        self.from_json(json)
-        db.session.add(self)
-        db.session.commit()
+        dict_salida={"estatus":"","mensaje":""}
+        try:
+            self.from_json(json)
+            db.session.add(self)
+            db.session.commit()
+            dict_salida['estatus']='ok'
+            dict_salida["mensaje"]='Opcion registrada con exito'
+        except:
+            db.session.rollback()
+            dict_salida['estatus'] = 'Error'
+            dict_salida["mensaje"] = 'Error al registrar la Opcion'
+        return  jsonify(dict_salida)
 
     def from_json(self,o):
-        #self.idOpcion=o['idOpcion']
+        if o.get("idOpcion")!=None:
+            self.idOpcion=o['idOpcion']
         self.nombre=o['nombre']
         self.descripcion=o['descripcion']
+
+    def modificar(self,json):
+        dict_salida = {"estatus": "", "mensaje": ""}
+        try:
+            self.from_json(json)
+            db.session.merge(self)
+            db.session.commit()
+            dict_salida['estatus'] = 'ok'
+            dict_salida["mensaje"] = 'Opcion modificada con exito'
+        except:
+            db.session.rollback()
+            dict_salida['estatus'] = 'Error'
+            dict_salida["mensaje"] = 'Error al modificar la Opcion'
+        return jsonify(dict_salida)
+    def eliminar(self,id):
+        #db.session.delete(self.query.get(id))
+        dict_salida = {"estatus": "", "mensaje": ""}
+        try:
+            self=self.query.get(id)
+            self.estatus='I'
+            db.session.merge(self)
+            db.session.commit()
+            dict_salida['estatus'] = 'ok'
+            dict_salida["mensaje"] = 'Opcion eliminada con exito'
+        except:
+            db.session.rollback()
+            dict_salida['estatus'] = 'Error'
+            dict_salida["mensaje"] = 'Error al eliminar la Opcion'
+        return jsonify(dict_salida)

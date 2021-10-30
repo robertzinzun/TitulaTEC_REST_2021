@@ -31,7 +31,6 @@ def opciones():
 
 @app.route('/opciones/<int:id>',methods=['GET'])
 def opcion(id):
-    #opcion={"estatus":"ok","mensaje":"Listado de opciones","opcion":{"idOpcion":id,"nombre":"Tesis","descripcion":"Informe de Tesis"}}
     o=Opcion()
     return o.consultaIndividual(id)
 
@@ -39,20 +38,21 @@ def opcion(id):
 def registroOpcion():
     ojson=request.get_json()
     o=Opcion()
-    o.insertar(ojson)
-    salida={"estatus":"ok","mensaje":"Opcion registrada con exito"}
-    return json.dumps(salida)
+    salida=o.insertar(ojson)
+    return salida
 
 @app.route('/opciones',methods=['PUT'])
 def modificarOpcion():
     opcion=request.get_json()
-    salida = {"estatus": "ok", "mensaje": "Opcion modificada con exito"}
-    return jsonify(salida)
+    o=Opcion()
+    salida=o.modificar(opcion)
+    return salida
 
 @app.route('/opciones/<int:id>',methods=['DELETE'])
 def eliminarOpcion(id):
-    salida = {"estatus": "ok", "mensaje": "Opcion con id: "+str(id)+" eliminada con exito"}
-    return jsonify(salida)
+    o=Opcion()
+    salida=o.eliminar(id)
+    return salida
 
 #fin de la sección del servicio de opciones
 
