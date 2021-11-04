@@ -1,6 +1,6 @@
 from flask import Flask,request,jsonify
 import json
-from Dao import Opcion,db
+from Dao import Opcion,db,Solicitud
 
 app=Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI']='mysql+pymysql://titulatec_soa:Hola.123@localhost:3306/TitulaTEC_SOA'
@@ -20,7 +20,14 @@ def alumno(nc):
 
 @app.route('/solicitudes')
 def solicitudes():
-    return 'Solicitudes'
+    s=Solicitud()
+    return s.consultaGeneral()[0].tituloProyecto
+@app.route('/solicitudes/agregar')
+def agregarSolicitud():
+    s = Solicitud()
+    s.agregar()
+    return 'Solicitude agregada'
+
 #Seccion del servicios de opciones
 @app.route('/opciones', methods=['GET'])
 def opciones():

@@ -1,5 +1,8 @@
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import Column,INTEGER,String
+from sqlalchemy import Column,INTEGER,String,Date,ForeignKey,text
+from sqlalchemy.orm import relationship
+import datetime
+
 import json
 from flask import jsonify
 
@@ -98,3 +101,25 @@ class Opcion(db.Model):
             dict_salida['estatus'] = 'Error'
             dict_salida["mensaje"] = 'Error al eliminar la Opcion'
         return jsonify(dict_salida)
+class Solicitud(db.Model):
+    __tablename__='Solicitudes'
+    idSolicitud=Column(INTEGER,primary_key=True)
+    fechaRegistro=Column(Date,default=datetime.date.today())
+    fechaAtencion=Column(Date,nullable=True)
+    tituloProyecto=Column(String(300),nullable=False)
+    estatus=Column(String,nullable=False,default='P')
+    idOpcion=Column(INTEGER,ForeignKey('Opciones.idOpcion'))
+    idAdministrativo = Column(INTEGER, ForeignKey('Administrativos.idAdministrativo'))
+    idAlumno = Column(INTEGER, ForeignKey('Alumnos.idAlumno'))
+    Opcion=relationship(Opcion,backref='solicitudes',lazy='select')
+
+    def consultaGeneral(self):
+        dict_solicitud={"idSolicitud":"","tituloProyecto":""}
+        return self.query.all()
+    def agregar(self):
+        data={"titulo":'Prueba final 3',"opcion":1,"alumno":1}
+        db.session.execute('call sp_registrar_solicitud(:titulo,:opcion,:alumno,@estatus,@mensaje)',data)
+        s=db.session.execute('select @estatus,@mensaje').fetchone()
+        print(s)
+        db.session.commit()
+
