@@ -129,7 +129,7 @@ class Alumno(db.Model):
     noControl=Column(String(9),unique=True)
     anioEgreso=Column(INTEGER,nullable=False)
     creditos=Column(INTEGER,nullable=False)
-    estatus=Column(String,nullable=False,default=True)
+    estatus=Column(String,nullable=False,default='A')
     idUsuario=Column(INTEGER,ForeignKey('Usuarios.idUsuario'))
     idCarrera=Column(INTEGER,ForeignKey('Carreras.idCarrera'))
     usuario=relationship(Usuario,lazy='select')
@@ -139,17 +139,17 @@ class Alumno(db.Model):
         return self.query.all()
     def agregar(self,ojson):
         dict_salida = {"estatus": "", "mensaje": ""}
-        #try:
-        self.from_json(ojson)
-        db.session.add(self.usuario)
-        db.session.add(self)
-        db.session.commit()
-        dict_salida['estatus'] = 'Ok'
-        dict_salida["mensaje"] = 'Alumno registrado con exito'
-        #except:
-        #    db.session.rollback()
-        #    dict_salida['estatus'] = 'Error'
-        #    dict_salida["mensaje"] = 'Error al registrar al alumno'
+        try:
+            self.from_json(ojson)
+            db.session.add(self.usuario)
+            db.session.add(self)
+            db.session.commit()
+            dict_salida['estatus'] = 'Ok'
+            dict_salida["mensaje"] = 'Alumno registrado con exito'
+        except:
+            db.session.rollback()
+            dict_salida['estatus'] = 'Error'
+            dict_salida["mensaje"] = 'Error al registrar al alumno'
         return jsonify(dict_salida)
 
 
@@ -188,9 +188,11 @@ class Solicitud(db.Model):
     idOpcion=Column(INTEGER,ForeignKey('Opciones.idOpcion'))
     idAdministrativo = Column(INTEGER, ForeignKey('Administrativos.idAdministrativo'))
     idAlumno = Column(INTEGER, ForeignKey('Alumnos.idAlumno'))
+
     opcion=relationship(Opcion,backref='solicitudes',lazy='select')
     alumno=relationship(Alumno,lazy='select')
     administrativo=relationship(Administrativo,lazy='select')
+
     def consultaGeneral(self):
         resp_json = {"estatus":"","mensaje":"","solicitudes":[]}
         try:
@@ -225,8 +227,8 @@ class Solicitud(db.Model):
             salida['estatus']=s[0]
             salida['mensaje']=s[1]
         except:
-            salida['estatus'] = 'Error'
-            salida['mensaje'] = 'Error al agregar la solicitud'
+             salida['estatus'] = 'Error'
+             salida['mensaje'] = 'Error al agregar la solicitud'
         return jsonify(salida)
 
     def consultaIndividual(self,id):
