@@ -1,6 +1,5 @@
-from flask import Flask,request,jsonify
-import json
-from Dao import Opcion,db,Solicitud
+from flask import Flask,request
+from Dao import Opcion, db, Solicitud, Alumno
 
 app=Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI']='mysql+pymysql://titulatec_soa:Hola.123@localhost:3306/TitulaTEC_SOA'
@@ -8,25 +7,48 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
 
 @app.route('/')
 def inicio():
-    return 'Escuchando el servicio REST de Opciones'
+    return 'Escuchando servicios REST de TitulaTEC'
 
-@app.route('/alumnos')
-def productos():
-    return 'Alumnos'
+@app.route('/alumnos',methods=['post'])
+def alumnos():
+    ojson=request.get_json()
+    a=Alumno()
+    return a.agregar(ojson)
 
 @app.route('/alumnos/<string:nc>')
 def alumno(nc):
     return 'alumno con numero de control:'+nc
 
-@app.route('/solicitudes')
+#seccion de solicitudes
+@app.route('/solicitudes',methods=['GET'])
 def solicitudes():
     s=Solicitud()
-    return s.consultaGeneral()[0].tituloProyecto
-@app.route('/solicitudes/agregar')
+    return s.consultaGeneral()
+@app.route('/solicitudes',methods=['POST'])
 def agregarSolicitud():
+    json=request.get_json()
     s = Solicitud()
-    s.agregar()
-    return 'Solicitude agregada'
+    salida=s.agregar(json)
+    return salida
+
+@app.route('/solicitudes',methods=['PUT'])
+def editarSolicitud():
+    json=request.get_json()
+    s = Solicitud()
+    salida=s.modificar(json)
+    return salida
+
+@app.route('/solicitudes/<int:id>',methods=['DELETE'])
+def eliminarSolicitud(id):
+    s = Solicitud()
+    salida=s.eliminar(id)
+    return salida
+
+@app.route('/solicitudes/<int:id>',methods=['GET'])
+def consultarSolicitud(id):
+    s=Solicitud()
+    return s.consultaIndividual(id)
+#fin de seccion de solicitudes
 
 #Seccion del servicios de opciones
 @app.route('/opciones', methods=['GET'])
