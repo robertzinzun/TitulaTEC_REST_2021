@@ -1,3 +1,5 @@
+
+
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, INTEGER, String, Date, ForeignKey, text, values
 from sqlalchemy.orm import relationship
@@ -18,7 +20,7 @@ class Opcion(db.Model):
         dict_json = {"estatus": "", "mensaje": "", "opciones": []}
         try:
             dict_json['estatus'] = "Ok"
-            lista = self.query.all()
+            lista = self.query.filter(Opcion.estatus=='A').all()
             if len(lista)>0:
                 dict_json['mensaje'] = "Listado de opciones"
                 dict_json['opciones'] = self.to_json_list(lista)
@@ -121,7 +123,27 @@ class Usuario(db.Model):
     email=Column(String(100),unique=True)
     password=Column(String(20),nullable=False)
     tipo=Column(String,nullable=False,default='E')
-    estatus=Column(String,nullable=False,default=True)
+    estatus=Column(String,nullable=False,default='A')
+    def autenticar(self,email,password):
+        a_json={"estatus":"","mensaje":""}
+        try:
+            a=self.query.filter(Usuario.email==email,Usuario.password==password,Usuario.estatus=='A').first()
+            if a!=None:
+                a_json['usuario']=self.to_json(a)
+                a_json["estatus"]='Ok'
+                a_json["mensaje"]='Usuario identificado'
+            else:
+                a_json["estatus"] = 'Error'
+                a_json["mensaje"] = 'Datos incorrectos'
+        except:
+            a_json["estatus"] = 'Error'
+            a_json["mensaje"] = 'Datos incorrectos'
+        return a_json
+
+    def to_json(self,o):
+        dict={"id":o.idUsuario,"nombre":o.nombre,"sexo":o.sexo,
+                     "telefono":o.telefono,"email":o.email,"estatus":o.estatus,"tipo":o.tipo}
+        return dict
 
 class Alumno(db.Model):
     __tablename__='Alumnos'
@@ -129,12 +151,33 @@ class Alumno(db.Model):
     noControl=Column(String(9),unique=True)
     anioEgreso=Column(INTEGER,nullable=False)
     creditos=Column(INTEGER,nullable=False)
-    estatus=Column(String,nullable=False,default='A')
+    estatus=Column(String,nullable=False,default='E')
     idUsuario=Column(INTEGER,ForeignKey('Usuarios.idUsuario'))
     idCarrera=Column(INTEGER,ForeignKey('Carreras.idCarrera'))
     usuario=relationship(Usuario,lazy='select')
     carrera=relationship(Carrera,lazy='select')
 
+    def consultarPorIdUsuario(self,id):
+        dict_al={"estatus":"","mensaje":""}
+        try:
+            a=self.query.filter(Alumno.idUsuario==id).first()
+            if a!=None:
+                dict_al['alumno']=self.to_json(a)
+                dict_al['estatus']='Ok'
+                dict_al['mensaje']='Alumno identificado'
+            else:
+                dict_al['estatus'] = 'Error'
+                dict_al['mensaje'] = 'El Alumno no existe'
+        except:
+            dict_al['estatus'] = 'Error'
+            dict_al['mensaje'] = 'Excepcion'
+        return dict_al
+
+    def to_json(self,o):
+        dict={"id":o.idAlumno,"nombre":o.usuario.nombre,"sexo":o.usuario.sexo,
+              "telefono":o.usuario.telefono,"email":o.usuario.email,"noControl":o.noControl,
+              "creditos":o.creditos,"anioEgreso":o.anioEgreso,"estatus":o.estatus,"carrera":o.carrera.nombre}
+        return dict
     def consultaGeneral(self):
         return self.query.all()
     def agregar(self,ojson):
@@ -188,7 +231,6 @@ class Solicitud(db.Model):
     idOpcion=Column(INTEGER,ForeignKey('Opciones.idOpcion'))
     idAdministrativo = Column(INTEGER, ForeignKey('Administrativos.idAdministrativo'))
     idAlumno = Column(INTEGER, ForeignKey('Alumnos.idAlumno'))
-
     opcion=relationship(Opcion,backref='solicitudes',lazy='select')
     alumno=relationship(Alumno,lazy='select')
     administrativo=relationship(Administrativo,lazy='select')
@@ -268,3 +310,18 @@ class Solicitud(db.Model):
             salida['estatus'] = 'Error'
             salida['mensaje'] = 'Error al eliminar la solicitud'
         return jsonify(salida)
+
+    def consultaPorAlumno(self,id):
+        resp_json = {"estatus": "", "mensaje": ""}
+        try:
+            lista = self.query.filter(Solicitud.idAlumno==id).all()
+            resp_json['estatus'] = 'Ok'
+            resp_json['mensaje'] = 'Listado de solicitudes'
+            lista_json = []
+            for s in lista:
+                lista_json.append(self.toJson(s))
+            resp_json['solicitudes'] = lista_json
+        except:
+            resp_json['estatus'] = 'Error'
+            resp_json['mensaje'] = 'Error al consultar las solicitudes'
+        return jsonify(resp_json)

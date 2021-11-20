@@ -1,5 +1,5 @@
 from flask import Flask,request
-from Dao import Opcion, db, Solicitud, Alumno
+from Dao import Opcion, db, Solicitud, Alumno, Usuario
 
 app=Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI']='mysql+pymysql://titulatec_soa:Hola.123@localhost:3306/TitulaTEC_SOA'
@@ -15,9 +15,17 @@ def alumnos():
     a=Alumno()
     return a.agregar(ojson)
 
-@app.route('/alumnos/<string:nc>')
-def alumno(nc):
-    return 'alumno con numero de control:'+nc
+@app.route('/alumnos/autenticar',methods=['get'])
+def alumno():
+    datos=request.get_json()
+    u=Usuario()
+    salida=u.autenticar(datos['email'],datos['password'])
+    if salida['estatus']=='Ok':
+        a=Alumno()
+        usuario=salida['usuario']
+        if usuario['tipo']=='E':
+            salida=a.consultarPorIdUsuario(usuario['id'])
+    return salida
 
 #seccion de solicitudes
 @app.route('/solicitudes',methods=['GET'])
@@ -48,6 +56,11 @@ def eliminarSolicitud(id):
 def consultarSolicitud(id):
     s=Solicitud()
     return s.consultaIndividual(id)
+
+@app.route('/solicitudes/alumno/<int:id>',methods=['GET'])
+def consultarSolicitudesAlumno(id):
+    s = Solicitud()
+    return s.consultaPorAlumno(id)
 #fin de seccion de solicitudes
 
 #Seccion del servicios de opciones
@@ -55,7 +68,6 @@ def consultarSolicitud(id):
 def opciones():
     o=Opcion()
     lista=o.consultaGeneral()
-    print(lista)
     return lista
 
 @app.route('/opciones/<int:id>',methods=['GET'])
@@ -87,4 +99,4 @@ def eliminarOpcion(id):
 
 if __name__=='__main__':
     db.init_app(app)
-    app.run(debug=True,host='0.0.0.0',port=5000)
+    app.run(debug=True,host='0.0.0.0',port=8000)
